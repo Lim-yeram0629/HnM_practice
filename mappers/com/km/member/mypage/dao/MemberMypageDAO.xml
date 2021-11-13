@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="com.km.member.mypage.dao.MemberMypageDAO">
+	
+	<resultMap type="com.km.member.model.dto.UserDTO" id="userResultMap">
+		<id property="email" column="EMAIL"/>
+		<result property="name" column="MEM_NAME"/>
+		<result property="phone" column="MEM_PHONE"/>
+		<result property="password" column="PASSWORD"/>
+		<result property="userType" column="USER_TYPE"/>
+	</resultMap>
+	
+	<resultMap type="com.km.member.model.dto.MemberDTO" id="memberResultMap">
+		<id property="nickName" column="NICKNAME"/>
+		<result property="birthDay" column="BIRTH_DAY"/>
+		<result property="address" column="MEM_ADDRESS"/>
+		<result property="gender" column="GENDER"/>
+		<result property="isBlack" column="IS_BLACK"/>
+		<result property="cntWarning" column="CNT_WARNING"/>
+		<result property="likesCode" column="LIKES_CODE"/>
+		<result property="locationCode" column="LOCATION_CODE"/>
+		<result property="profilePath" column="PROFILE_PATH"/>
+		<result property="email" column="EMAIL"/>
+		<collection property="user" resultMap="userResultMap"></collection>
+	</resultMap>
+	
+	 <!-- post_tbl 게시물 -->
+	 <resultMap type="com.km.board.model.dto.PostDTO" id="postResultMap">
+		<id property="postNo" column="POST_NO"/>
+		<result property="postTitle" column="POST_TITLE"/>
+		<result property="postContents" column="POST_CONTENTS"/>
+		<result property="postDate" column="POST_DATE"/>
+		<result property="cntLike" column="CNT_LIKE"/>
+		<result property="cntView" column="CNT_VIEW"/>
+		<result property="email" column="EMAIL"/>
+		<result property="repostDate" column="REPOST_DATE"/>
+		<result property="isDeleted" column="IS_DELETED"/>
+		<result property="boardCode" column="BOARD_CODE"/>
+	</resultMap>
+	
+	<select id = "selectMemberInfo" resultMap="memberResultMap">
+		SELECT
+			   A.EMAIL,
+			   A.MEM_NAME,
+			   A.MEM_PHONE,
+			   B.NICKNAME,
+			   B.BIRTH_DAY,
+			   B.MEM_ADDRESS,
+			   B.LIKES_CODE,
+			   B.LOCATION_CODE,
+			   B.PROFILE_PATH
+	 	 FROM  USER_TBL A
+		 JOIN  MEMBER_TBL B
+		   ON  A.EMAIL = B.EMAIL
+		WHERE  A.EMAIL = #{ user.email }
+	</select>
+	
+	<update id="updateMemberNickName" parameterType="com.km.member.model.dto.MemberDTO">
+		UPDATE MEMBER_TBL 
+		   SET NICKNAME = #{ nickName }
+		 WHERE EMAIL = #{ email }
+	</update>
+	
+	<update id="updateUserPhone" parameterType="com.km.member.model.dto.UserDTO">
+		UPDATE USER_TBL
+		   SET MEM_PHONE = #{ phone }
+		 WHERE EMAIL = #{ email }
+	</update>
+	
+	<update id="updateMemberAddress" parameterType="com.km.member.model.dto.MemberDTO">
+		UPDATE MEMBER_TBL
+		   SET MEM_ADDRESS = #{ address }
+		 WHERE EMAIL = #{ email }
+	</update>
+	
+	<update id="updateMemberLikesCode" parameterType="com.km.member.model.dto.MemberDTO" >
+		UPDATE MEMBER_TBL
+		   SET LIKES_CODE = #{ likesCode }
+		 WHERE EMAIL = #{ email }
+	</update>
+	
+	<update id="updateMemberLocationCode" parameterType="com.km.member.model.dto.MemberDTO">
+		UPDATE MEMBER_TBL
+		   SET LOCATION_CODE = #{ locationCode }
+		 WHERE EMAIL = #{ email }
+	</update>
+	
+	<update id="updateProfilePath" parameterType="com.km.member.model.dto.MemberDTO">
+		UPDATE MEMBER_TBL
+		   SET PROFILE_PATH = #{ profilePath }
+		 WHERE EMAIL = #{ email }
+	</update>
+	
+	<!-- 내가 쓴 게시물 목록 조회 -->
+	<select id = "selectMyPosts" parameterType = "hashmap" resultMap ="postResultMap">
+		SELECT
+			   @ROWNUM:=@ROWNUM+1
+		     , A.POST_NO
+		     , A.POST_TITLE
+		     , A.POST_CONTENTS
+		     , A.POST_DATE
+		     , A.CNT_LIKE
+		     , A.CNT_VIEW
+		     , A.EMAIL
+		     , A.REPOST_DATE
+		     , A.IS_DELETED
+		     , A.BOARD_CODE
+		  FROM post_tbl A , (SELECT @ROWNUM:=0) R
+		 WHERE A.EMAIL = #{ member.email }
+		   AND IS_DELETED = 'N'
+		<if test="pageNumberingAndSearching.searchValue != '' and pageNumberingAndSearching.searchValue != null">
+		   AND A.POST_TITLE LIKE CONCAT('%',#{ pageNumberingAndSearching.searchValue },'%')
+		</if>
+		<if test="pageNumberingAndSearching.sortValue == 'postDateASC'">
+		    ORDER BY A.POST_DATE ASC
+		</if>
+		<if test="pageNumberingAndSearching.sortValue == 'postDateDESC'">
+		    ORDER BY A.POST_DATE DESC
+		</if>
+		<if test="pageNumberingAndSearching.sortValue == 'cntLike'">
+		    ORDER BY A.CNT_LIKE DESC
+		</if>
+		<if test="pageNumberingAndSearching.sortValue == 'cntView'">
+		    ORDER BY A.CNT_VIEW DESC
+		</if>
+		LIMIT #{ pageNumberingAndSearching.startRow }, 10
+	</select>
+	
+	<!-- 페이지 네이션관련 해당 게시물수 측정 -->
+	<select id="selectMyPostsTotalNumber" resultType="_int" parameterType="hashmap">
+        SELECT 
+               COUNT(*)
+          FROM post_tbl A
+          WHERE A.EMAIL = #{ email }
+            AND IS_DELETED = 'N'
+    		<if test="searchValue != '' and searchValue != null">
+		   		AND A.POST_TITLE LIKE CONCAT('%',#{ pageNumberingAndSearching.searchValue },'%')
+		 	</if>
+	</select>
+	
+	<update id = "deletePostList" parameterType="java.util.List">
+		UPDATE POST_TBL A
+		  SET A.IS_DELETED = 'Y'
+		 <where>
+	  		 <foreach collection="list" item = "postNo" open="POST_NO IN ( " close=" )" separator=", ">
+		   		#{postNo}
+			  </foreach>
+		</where>
+	</update>
+	
+	<!-- 스크랩한 게시물 -->
+	<select id = "selectScrapContents" parameterType = "hashmap" resultMap ="postResultMap">
+		SELECT
+			   @ROWNUM:=@ROWNUM+1
+		     , A.POST_NO
+		     , A.POST_TITLE
+		     , A.POST_CONTENTS
+		     , A.POST_DATE
+		     , A.CNT_LIKE
+		     , A.CNT_VIEW
+		     , A.EMAIL
+		     , A.REPOST_DATE
+		     , A.IS_DELETED
+		     , A.BOARD_CODE
+		  FROM post_tbl A 
+		  JOIN SCRAP_TBL B
+		    ON A.POST_NO = B.POST_NO
+		       , (SELECT @ROWNUM:=0) R
+		 WHERE B.EMAIL = #{ member.email }
+		   AND IS_DELETED = 'N'
+		 <if test="pageNumberingAndSearching.searchValue != '' and pageNumberingAndSearching.searchValue != null">
+		   AND A.POST_TITLE LIKE CONCAT('%',#{ pageNumberingAndSearching.searchValue },'%')
+		</if>
+		<if test="pageNumberingAndSearching.sortValue == 'postDateASC'">
+		    ORDER BY A.POST_DATE ASC
+		</if>
+		<if test="pageNumberingAndSearching.sortValue == 'postDateDESC'">
+		    ORDER BY A.POST_DATE DESC
+		</if>
+		<if test="pageNumberingAndSearching.sortValue == 'cntLike'">
+		    ORDER BY A.CNT_LIKE DESC
+		</if>
+		<if test="pageNumberingAndSearching.sortValue == 'cntView'">
+		    ORDER BY A.CNT_VIEW DESC
+		</if>
+		LIMIT #{ pageNumberingAndSearching.startRow }, 10
+	</select>
+	
+	<!-- 페이지 네이션관련 해당 게시물수 측정 -->
+	<select id="selectScrapContentsTotalNumber" resultType="_int" parameterType="hashmap">
+        SELECT 
+               COUNT(*)
+          FROM post_tbl A
+          JOIN SCRAP_TBL B
+		    ON A.POST_NO = B.POST_NO
+		<where>
+	    	B.EMAIL = #{ member.email }
+	    		AND IS_DELETED = 'N'
+    		<if test="searchValue != '' and searchValue != null">
+		   		AND A.POST_TITLE LIKE CONCAT('%',#{ pageNumberingAndSearching.searchValue },'%')
+		 	</if>
+    	</where>
+	</select>
+	
+	<delete id = "deleteScrapList" parameterType="hashmap">
+		DELETE
+		  FROM SCRAP_TBL A
+		 <where>
+	  		 <foreach collection="scrapNoList" item = "scrapNo" open="POST_NO IN ( " close=" )" separator=", ">
+		   		#{ scrapNo }
+			  </foreach>
+			  AND A.EMAIL = #{ member.email }
+		</where>
+	</delete>
+	
+	<select id="selectMyFriendList" resultType="hashmap">
+		  SELECT 
+		  		 D.LIKED_EMAIL,
+		  		 A.NICKNAME,
+		   		 A.PROFILE_PATH,
+	   			 B.LIKES_NAME,
+	   			 C.LOCATION_NAME
+  		   	FROM MEMBER_TBL A
+ 		   	JOIN likedfreinds_tbl D ON D.LIKED_EMAIL = A.EMAIL  
+  			JOIN likes_tbl B ON B.LIKES_CODE =  A.LIKES_CODE 
+			JOIN location_tbl C ON C.LOCATION_CODE =  A.LOCATION_CODE 
+			WHERE D.EMAIL = #{ email }
+			ORDER BY C.LOCATION_NAME ASC
+	</select>
+	
+	<delete id = "deleteMyFriend" parameterType="hashmap">
+		DELETE
+		  FROM likedfreinds_tbl A
+		 WHERE A.LIKED_EMAIL = #{ likedEmail }
+		   AND A.EMAIL = #{ memberEmail }
+	</delete>
+	
+	<select id="selectBlockFriendList" resultType="hashmap">
+		  SELECT 
+		   		 D.BLOCKED_EMAIL,
+		  		 A.NICKNAME,
+		   		 A.PROFILE_PATH,
+	   			 B.LIKES_NAME,
+	   			 C.LOCATION_NAME
+  		   	FROM MEMBER_TBL A
+ 		   	JOIN blocked_tbl D ON D.BLOCKED_EMAIL = A.EMAIL  
+  			JOIN likes_tbl B ON B.LIKES_CODE =  A.LIKES_CODE 
+			JOIN location_tbl C ON C.LOCATION_CODE =  A.LOCATION_CODE 
+			WHERE D.EMAIL = #{ email }
+			ORDER BY C.LOCATION_NAME ASC
+	</select>
+	
+	<delete id = "deleteBlockFriend" parameterType="hashmap">
+		DELETE
+		  FROM blocked_tbl A
+		 WHERE A.BLOCKED_EMAIL = #{ blockedEmail }
+		   AND A.EMAIL = #{ memberEmail }
+	</delete>
+	
+	<insert id="addMyFriend" parameterType="hashmap">
+		INSERT 
+		  INTO likedfreinds_tbl
+		VALUES ( #{ memberEmail }, #{ likedEmail } )
+	</insert>
+	
+	<insert id="addBloked" parameterType="hashmap">
+		INSERT 
+		  INTO blocked_tbl
+		VALUES ( #{ memberEmail }, #{ blockedEmail } )
+	</insert>
+	
+</mapper>

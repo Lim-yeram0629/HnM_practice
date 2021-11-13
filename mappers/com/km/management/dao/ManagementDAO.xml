@@ -1,0 +1,464 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.km.management.dao.ManagementDAO">
+
+	<resultMap type="com.km.board.model.dto.ReportPostDTO"
+		id="reportResultMap">
+		<id property="postNo" column="POST_NO" />
+		<result property="report" column="REPORT" />
+		<result property="isAccepted" column="IS_ACCEPTED" />
+		<result property="email" column="EMAIL" />
+	</resultMap>
+	<!-- 페이지 네이션관련 해당 게시물수 측정 -->
+	<select id="selectBlacklistTotalNumber" resultType="_int"
+		parameterType="hashmap">
+		SELECT
+		COUNT(*)
+		FROM member_tbl M
+		JOIN user_tbl U ON U.EMAIL = M.EMAIL
+		JOIN location_tbl LC ON LC.LOCATION_CODE = M.LOCATION_CODE
+		JOIN
+		likes_tbl LK ON LK.LIKES_CODE = M.LIKES_CODE
+		<where>
+			M.IS_BLACK = 'Y'
+			<if test="searchCondition == 'location'">
+				LC.LOCATION_NAME LIKE CONCAT('%', #{ searchValue } , '%')
+			</if>
+			<if test="searchCondition == 'nickName'">
+				M.NICKNAME LIKE CONCAT('%', #{ searchValue } , '%')
+			</if>
+			<if test="searchCondition == 'likes'">
+				LK.LIKES_NAME LIKE CONCAT('%', #{ searchValue } , '%')
+			</if>
+			<if test="searchCondition == 'email'">
+				M.EMAIL LIKE CONCAT('%', #{ searchValue } , '%')
+			</if>
+			<if test="searchCondition == 'name'">
+				U.MEM_NAME LIKE CONCAT('%', #{ searchValue } , '%')
+			</if>
+		</where>
+	</select>
+
+	<!-- 회원 리스트 -->
+	<select id="selectBlacklist" resultType="hashmap">
+		SELECT
+		LC.LOCATION_NAME,
+		LK.LIKES_NAME,
+		M.EMAIL,
+		U.MEM_NAME,
+		M.NICKNAME,
+		M.BIRTH_DAY,
+		M.GENDER,
+		M.CNT_WARNING,
+		M.IS_BLACK
+		FROM member_tbl M
+		JOIN
+		user_tbl U ON U.EMAIL = M.EMAIL
+		JOIN location_tbl LC ON
+		LC.LOCATION_CODE = M.LOCATION_CODE
+		JOIN likes_tbl LK ON LK.LIKES_CODE =
+		M.LIKES_CODE
+		<where>
+			M.IS_BLACK = 'Y'
+			<if test="pageNumberingAndSearching.searchCondition == 'location'">
+				LC.LOCATION_NAME LIKE CONCAT('%', #{
+				pageNumberingAndSearching.searchValue } , '%')
+			</if>
+			<if test="pageNumberingAndSearching.searchCondition == 'nickName'">
+				M.NICKNAME LIKE CONCAT('%', #{
+				pageNumberingAndSearching.searchValue } , '%')
+			</if>
+			<if test="pageNumberingAndSearching.searchCondition == 'likes'">
+				LK.LIKES_NAME LIKE CONCAT('%', #{
+				pageNumberingAndSearching.searchValue } , '%')
+			</if>
+			<if test="pageNumberingAndSearching.searchCondition == 'email'">
+				M.EMAIL LIKE CONCAT('%', #{
+				pageNumberingAndSearching.searchValue } , '%')
+			</if>
+			<if test="pageNumberingAndSearching.searchCondition == 'name'">
+				U.MEM_NAME LIKE CONCAT('%', #{
+				pageNumberingAndSearching.searchValue } , '%')
+			</if>
+		</where>
+		ORDER BY LC.LOCATION_NAME ASC
+		LIMIT #{
+		pageNumberingAndSearching.startRow }, 10
+	</select>
+
+	<!-- 페이지 네이션관련 해당 게시물수 측정 -->
+	<select id="selectMemberListTotalNumber" resultType="_int"
+		parameterType="hashmap">
+		SELECT
+		COUNT(*)
+		FROM member_tbl M
+		JOIN user_tbl U ON U.EMAIL = M.EMAIL
+		JOIN location_tbl LC ON LC.LOCATION_CODE = M.LOCATION_CODE
+		JOIN
+		likes_tbl LK ON LK.LIKES_CODE = M.LIKES_CODE
+		<where>
+			<if test="searchCondition == 'location'">
+				LC.LOCATION_NAME LIKE CONCAT('%', #{ searchValue } , '%')
+			</if>
+			<if test="searchCondition == 'nickName'">
+				M.NICKNAME LIKE CONCAT('%', #{ searchValue } , '%')
+			</if>
+			<if test="searchCondition == 'likes'">
+				LK.LIKES_NAME LIKE CONCAT('%', #{ searchValue } , '%')
+			</if>
+			<if test="searchCondition == 'email'">
+				M.EMAIL LIKE CONCAT('%', #{ searchValue } , '%')
+			</if>
+			<if test="searchCondition == 'name'">
+				U.MEM_NAME LIKE CONCAT('%', #{ searchValue } , '%')
+			</if>
+		</where>
+	</select>
+
+	<!-- 회원 리스트 -->
+	<select id="selectMemberList" resultType="hashmap">
+		SELECT
+		LC.LOCATION_NAME,
+		LK.LIKES_NAME,
+		M.EMAIL,
+		U.MEM_NAME,
+		M.NICKNAME,
+		M.BIRTH_DAY,
+		M.GENDER,
+		M.CNT_WARNING,
+		M.IS_BLACK,
+		U.IS_DEACTIVATE
+		FROM member_tbl M
+		JOIN
+		user_tbl U ON U.EMAIL = M.EMAIL
+		JOIN location_tbl LC ON
+		LC.LOCATION_CODE = M.LOCATION_CODE
+		JOIN likes_tbl LK ON LK.LIKES_CODE =
+		M.LIKES_CODE
+		<where>
+			<if test="pageNumberingAndSearching.searchCondition == 'location'">
+				LC.LOCATION_NAME LIKE CONCAT('%', #{
+				pageNumberingAndSearching.searchValue } , '%')
+			</if>
+			<if test="pageNumberingAndSearching.searchCondition == 'nickName'">
+				M.NICKNAME LIKE CONCAT('%', #{
+				pageNumberingAndSearching.searchValue } , '%')
+			</if>
+			<if test="pageNumberingAndSearching.searchCondition == 'likes'">
+				LK.LIKES_NAME LIKE CONCAT('%', #{
+				pageNumberingAndSearching.searchValue } , '%')
+			</if>
+			<if test="pageNumberingAndSearching.searchCondition == 'email'">
+				M.EMAIL LIKE CONCAT('%', #{
+				pageNumberingAndSearching.searchValue } , '%')
+			</if>
+			<if test="pageNumberingAndSearching.searchCondition == 'name'">
+				U.MEM_NAME LIKE CONCAT('%', #{
+				pageNumberingAndSearching.searchValue } , '%')
+			</if>
+		</where>
+		ORDER BY LC.LOCATION_NAME ASC
+		LIMIT #{
+		pageNumberingAndSearching.startRow }, 10
+	</select>
+
+
+
+	<resultMap type="com.km.board.model.dto.PostDTO"
+		id="postResultMap">
+		<id property="postNo" column="POST_NO" />
+		<result property="postTitle" column="POST_TITLE" />
+		<result property="postContents" column="POST_CONTENTS" />
+		<result property="postDate" column="POST_DATE" />
+		<result property="cntLike" column="CNT_LIKE" />
+		<result property="cntView" column="CNT_VIEW" />
+		<result property="email" column="EMAIL" />
+		<result property="repostDate" column="REPOST_DATE" />
+		<result property="isDeleted" column="IS_DELETED" />
+		<result property="boardCode" column="BOARD_CODE" />
+	</resultMap>
+
+	<select id="selectEachPost" resultMap="postResultMap">
+		SELECT
+		A.POST_NO
+		, A.POST_TITLE
+		, A.POST_CONTENTS
+		, A.POST_DATE
+		,
+		A.CNT_LIKE
+		, A.CNT_VIEW
+		, A.EMAIL
+		, A.REPOST_DATE
+		, A.IS_DELETED
+		,
+		A.BOARD_CODE
+		FROM post_tbl A
+		group by A.BOARD_CODE
+		having count(*)<![CDATA[<]]>
+		2;
+	</select>
+
+	<select id="selectTotalPostNumber" resultType="_int"
+		parameterType="hashmap">
+		SELECT
+		COUNT(*)
+		FROM report_post_tbl A
+		JOIN post_tbl B ON A.POST_NO =
+		B.POST_NO
+		<where>
+			A.IS_ACCEPTED = 'N'
+			<if test="searchValue != '' and searchValue != null">
+				AND B.POST_TITLE LIKE CONCAT('%',#{ searchValue },'%')
+			</if>
+		</where>
+	</select>
+
+	<select id="selectPost"
+		parameterType="com.km.common.paging.PageNumberingAndSearching"
+		resultType="hashmap">
+		SELECT
+		@ROWNUM:=@ROWNUM+1
+		, B.POST_NO
+		, B.POST_TITLE
+		, B.POST_CONTENTS
+		, B.POST_DATE
+		, B.CNT_LIKE
+		, B.CNT_VIEW
+		, B.EMAIL
+		, B.REPOST_DATE
+		, B.IS_DELETED
+		, A.EMAIL as reportEmail
+		FROM report_post_tbl A
+		JOIN post_tbl B ON A.POST_NO = B.POST_NO
+		, (SELECT @ROWNUM:=0) R
+		WHERE
+		A.IS_ACCEPTED = 'N'
+		AND B.IS_DELETED = 'N'
+		<if test="searchValue != '' and searchValue != null">
+			AND B.POST_TITLE LIKE CONCAT('%',#{ searchValue},'%')
+		</if>
+		<if test="sortValue == null">
+		    ORDER BY B.POST_NO DESC
+		</if>
+		<if test="sortValue == 'postDateASC'">
+		    ORDER BY B.POST_DATE ASC
+		</if>
+		<if test="sortValue == 'postDateDESC'">
+		    ORDER BY B.POST_DATE DESC
+		</if>
+		LIMIT #{ startRow }, 10
+
+	</select>
+
+	<select id="selectReport" resultMap="reportResultMap">
+		SELECT
+		A.POST_NO
+		, A.REPORT
+		,
+		A.IS_ACCEPTED
+		, A.EMAIL
+		FROM report_post_tbl A
+	</select>
+
+	<update id="updateIsAccepted" parameterType="hashmap">
+		UPDATE
+		report_post_tbl
+		SET IS_ACCEPTED = #{ acceptType }
+		WHERE POST_NO = #{ postNo }
+	</update>
+
+	<update id="deleteBlacklist" parameterType="hashmap">
+		UPDATE member_tbl A
+		SET A.IS_BLACK = 'N',
+			A.CNT_WARNING = 0
+		<where>
+			<foreach collection="list" item="email" open="A.EMAIL IN ( "
+				close=" )" separator=", ">
+				#{ email }
+			</foreach>
+		</where>
+	</update>
+
+	<select id="selectCautionCount" resultType="_int">
+		SELECT
+			CNT_WARNING
+		FROM member_tbl
+		WHERE
+		EMAIL = #{ cautionEamil }
+	</select>
+
+	<update id="updateCautionCount">
+		UPDATE
+		member_tbl
+		SET CNT_WARNING = CNT_WARNING + 1
+		WHERE
+		EMAIL = #{ cautionEamil }
+	</update>
+
+	<update id="updateIsBlack">
+		UPDATE
+		member_tbl
+		SET IS_BLACK = 'Y'
+		WHERE EMAIL = #{
+		cautionEamil }
+	</update>
+	
+	<update id="updateIsDeleted" parameterType="hashmap">
+		UPDATE post_tbl
+		   SET IS_DELETED = 'Y'
+		 WHERE POST_NO = #{ postNo }  
+	</update>
+	
+	<insert id="insertPost">
+		INSERT
+		  INTO post_tbl
+		(
+		  POST_NO
+		, POST_TITLE
+		, POST_CONTENTS
+		, POST_DATE
+		, EMAIL
+		, BOARD_CODE
+		)
+		VALUES
+		(
+		  nextval('post_seq')
+		, #{ postTitle }
+		, #{ postContents }
+		, NOW()
+		, #{ email }
+		, #{ boardCode }
+		)
+	</insert>
+	
+	<select id="selectModifyPost" parameterType="_int" resultMap="postResultMap">
+		SELECT
+			   A.POST_NO
+			 , A.POST_TITLE
+			 , A.POST_CONTENTS
+		  FROM post_tbl A  
+		 WHERE POST_NO = #{ postNo }
+	</select>
+	
+	<update id="updatePost">
+		UPDATE post_tbl
+		   SET POST_TITLE = #{ postTitle },
+		   	   POST_CONTENTS = #{ postContents }
+		 WHERE POST_NO = #{ postNo }
+	</update>
+	
+	 <!-- Temp Post 게시판 -->
+	<select id="selectTempPoatListTotal" resultType="_int" parameterType="hashmap">
+        SELECT 
+               COUNT(*)
+           FROM temp_post_tbl A
+		   JOIN ad_store_tbl B ON B.EMAIL = A.EMAIL
+		   JOIN ad_tbl C ON C.AD_NO = B.AD_NO
+		   JOIN location_tbl D ON D.LOCATION_CODE = B.LOCATION_CODE
+    	  WHERE A.IS_DELETED = 'N'
+   		<if test="searchValue != '' and searchValue != null">
+	   	   AND B.CO_NAME LIKE CONCAT('%',#{ searchValue },'%')
+		</if>
+	</select>
+	
+	<select id="selectTempPostList" parameterType="com.km.common.paging.PageNumberingAndSearching" resultType="hashmap">
+		SELECT
+			   @ROWNUM:=@ROWNUM+1	
+		     , A.POST_NO
+		     , A.POST_TITLE
+		     , A.POST_CONTENTS
+		     , A.POST_DATE
+		     , B.CO_NAME
+		     , C.AD_TYPE
+		     , C.IS_ACCEPTED
+		     , C.AD_NO
+		     , C.AD_NEGATIVE
+		     , D.LOCATION_NAME
+		  FROM temp_post_tbl A
+		  JOIN ad_store_tbl B ON B.EMAIL = A.EMAIL
+		  JOIN ad_tbl C ON C.AD_NO = B.AD_NO
+		  JOIN location_tbl D ON D.LOCATION_CODE = B.LOCATION_CODE
+		     , (SELECT @ROWNUM:=0) R
+		 WHERE A.IS_DELETED = 'N'
+		<if test="searchValue != '' and searchValue != null">
+		   AND B.CO_NAME LIKE CONCAT('%',#{ searchValue },'%')
+		</if>
+		<if test="sortValue == 'postDateDESC'">
+		    ORDER BY A.POST_DATE DESC
+		</if>
+		<if test="sortValue == 'acceptedASC'">
+		    ORDER BY C.IS_ACCEPTED ASC
+		</if>
+		<if test="sortValue == 'acceptedDESC'">
+		    ORDER BY C.IS_ACCEPTED DESC
+		</if>
+		LIMIT #{ startRow }, 10
+	</select>
+	
+	<update id="updateRejectAd" parameterType="hashmap">
+		UPDATE ad_tbl A
+		   SET A.IS_ACCEPTED = 'N',
+		   	   A.AD_NEGATIVE = #{ reason }
+		 WHERE AD_NO = #{ adNo }
+	</update>
+	
+	<insert id="adInsertToPost" parameterType="hashmap">
+		INSERT INTO post_tbl (
+			POST_NO,
+			POST_TITLE,
+			POST_CONTENTS,
+			POST_DATE,
+			CNT_LIKE,
+			CNT_VIEW,
+			EMAIL,
+			REPOST_DATE,
+			IS_DELETED,
+			BOARD_CODE,
+			AD_NO
+		)SELECT 
+			nextVal('post_seq'),
+			POST_TITLE,
+			POST_CONTENTS,
+			NOW(),
+			0,
+			0,
+			EMAIL,
+			null,
+			'N',
+			BOARD_CODE,
+			#{ adNo }
+		FROM temp_post_tbl WHERE POST_NO = #{ tempPostNo }
+	</insert>
+	
+	<update id="updateAdState">
+		UPDATE ad_tbl A
+		   SET A.IS_ACCEPTED = 'Y',
+		   	   A.START_DATE = NOW(),
+		   	   A.IS_PAYED = 'Y'
+		 WHERE A.AD_NO = #{ adNo }
+	</update>
+	
+	<select id = "selectAdPostNo" parameterType="_int" resultType="hashmap">
+		SELECT A.POST_NO
+		  FROM POST_TBL A
+		  WHERE A.AD_NO = #{ adNo }
+	</select>
+	
+	<update id = "updatePostState" parameterType="hashmap">
+		UPDATE post_tbl A
+			SET A.IS_DELETED = #{ isDeleted }
+		 WHERE A.AD_NO = #{ adNo }
+	</update>
+	
+	<update id = "deletePostList" parameterType="java.util.List">
+		UPDATE POST_TBL A
+		  SET A.IS_DELETED = 'Y'
+		 <where>
+	  		 <foreach collection="list" item = "postNo" open="POST_NO IN ( " close=" )" separator=", ">
+		   		#{postNo}
+			  </foreach>
+		</where>
+	</update>
+ </mapper>

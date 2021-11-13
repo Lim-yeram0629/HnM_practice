@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.km.store.dao.StoreDAO">
+	<resultMap type="com.km.store.model.dto.AdDTO" id="adResultMap">
+		<id property="adNo" column="AD_NO"/>
+		<result property="adType" column="AD_TYPE"/>
+		<result property="isPayed" column="IS_PAYED"/>
+		<result property="payDate" column="PAY_DATE"/>
+		<result property="isAccepted" column="IS_ACCEPTED"/>
+		<result property="adNegative" column="AD_NEGATIVE"/>
+		<result property="startDate" column="START_DATE"/>
+	</resultMap>
+	
+	<resultMap type="com.km.board.model.dto.PostDTO" id="postResultMap">
+		<id property="postNo" column="POST_NO"/>
+		<result property="postTitle" column="POST_TITLE"/>
+		<result property="postContents" column="POST_CONTENTS"/>
+		<result property="postDate" column="POST_DATE"/>
+		<result property="cntLike" column="CNT_LIKE"/>
+		<result property="cntView" column="CNT_VIEW"/>
+		<result property="email" column="EMAIL"/>
+		<result property="repostDate" column="REPOST_DATE"/>
+		<result property="isDeleted" column="IS_DELETED"/>
+		<result property="boardCode" column="BOARD_CODE"/>
+	</resultMap>
+	
+	<select id="selectAd" resultMap="adResultMap">
+		SELECT
+			   A.AD_NO
+			 , A.AD_TYPE
+			 , A.IS_PAYED
+			 , A.PAY_DATE
+			 , A.IS_ACCEPTED
+			 , A.AD_NEGATIVE
+			 , A.START_DATE
+		  FROM ad_tbl A
+		 WHERE A.AD_NO = #{ adNo }
+	</select>
+	
+	<select id="selectPost" resultMap="postResultMap">
+		SELECT
+		       A.POST_NO
+		     , A.POST_TITLE
+		     , A.POST_CONTENTS
+		     , A.POST_DATE
+		     , A.CNT_LIKE
+		     , A.CNT_VIEW
+		     , A.EMAIL
+		     , A.REPOST_DATE
+		     , A.IS_DELETED
+		  FROM post_tbl A
+		 WHERE A.EMAIL = #{ user.email }
+	</select>
+	
+	<insert id="insertPost">
+		INSERT
+		  INTO temp_post_tbl
+		(
+	      POST_NO
+	    , POST_TITLE
+	    , POST_CONTENTS
+	    , POST_DATE
+	    , CNT_LIKE
+	    , CNT_VIEW
+	    , EMAIL
+	    , REPOST_DATE
+	    , BOARD_CODE
+		)
+		  values
+		(
+		  NULL
+		, #{ postTitle }
+		, #{ postContents }
+		, NOW()
+		, #{ cntLike }
+		, #{ cntView }
+		, #{ email }
+		, null
+		, #{ boardCode }
+		);
+	</insert>
+	
+	<update id="updatePost">
+		UPDATE
+			   temp_post_tbl
+		   SET POST_TITLE = #{ postTitle },
+		   	   POST_CONTENTS = #{ postContents },
+		   	   REPOST_DATE = NOW()
+		 WHERE EMAIL = #{ email }
+	</update>
+	
+	<update id="updateAdType">
+		UPDATE
+			   ad_tbl
+		   SET AD_TYPE = #{ adType }
+		 WHERE AD_NO = #{ adNo }
+	</update>
+	
+	<update id="updateAdNo">
+		UPDATE
+			   ad_store_tbl
+		   SET AD_NO = (select currval from sequences where name = 'ad_seq')
+		 WHERE CO_REG_NO = #{ storeNo }
+	</update>
+	
+	<insert id="insertAd">
+		INSERT
+		  INTO ad_tbl
+		(
+		  AD_TYPE
+		, PAY_DATE
+		, AD_NEGATIVE
+		, START_DATE
+		, AD_NO
+		)
+		VALUES
+		(
+		  #{ adType }
+		, DATE_ADD(NOW(), INTERVAL 10 DAY)
+		, null
+		, null
+		, nextval('ad_seq')
+		)
+	</insert>
+	
+	<update id="updateStore" parameterType="hashmap">
+		UPDATE ad_store_tbl A INNER JOIN user_tbl B
+			ON A.EMAIL = B.EMAIL
+		   SET A.LOCATION_CODE = #{ adLocation },
+		   	   B.MEM_PHONE = #{ phone }
+		 WHERE A.CO_REG_NO = #{ storeNo }
+	</update>
+</mapper>

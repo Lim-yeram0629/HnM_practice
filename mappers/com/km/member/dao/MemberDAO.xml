@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.km.member.dao.MemberDAO">
+	<resultMap type="com.km.member.model.dto.UserDTO" id="userResultMap">
+		<id property="email" column="EMAIL"/>
+		<result property="name" column="MEM_NAME"/>
+		<result property="phone" column="MEM_PHONE"/>
+		<result property="password" column="PASSWORD"/>
+		<result property="userType" column="USER_TYPE"/>
+	</resultMap>
+	
+	<resultMap type="com.km.member.model.dto.MemberDTO" id="memberResultMap">
+		<id property="nickName" column="NICKNAME"/>
+		<result property="birthDay" column="BIRTH_DAY"/>
+		<result property="address" column="MEM_ADDRESS"/>
+		<result property="gender" column="GENDER"/>
+		<result property="isBlack" column="IS_BLACK"/>
+		<result property="cntWarning" column="CNT_WARNING"/>
+		<result property="likesCode" column="LIKES_CODE"/>
+		<result property="locationCode" column="LOCATION_CODE"/>
+		<result property="profilePath" column="PROFILE_PATH"/>
+		<result property="email" column="EMAIL"/>
+		<collection property="user" resultMap="userResultMap"></collection>
+	</resultMap>
+	
+	<resultMap type="com.km.member.model.dto.StoreDTO" id="storeResultMap">
+		<id property="storeName" column="CO_NAME"/>
+		<result property="storeTel" column="CO_TEL"/>
+		<result property="address" column="CO_ADDRESS"/>
+		<result property="storeNo" column="CO_REG_NO"/>
+		<result property="adNo" column="AD_NO"/>
+		<result property="locationCode" column="LOCATION_CODE"/>
+		<collection property="user" resultMap="userResultMap"></collection>
+	</resultMap>
+	
+	<sql id="user">
+	  	 EMAIL
+	   , MEM_NAME
+	   , MEM_PHONE
+	   , PASSWORD
+	   , USER_TYPE
+    </sql> 
+    
+    <sql id="member">
+	  	 NICKNAME
+	   , BIRTH_DAY
+	   , MEM_ADDRESS
+	   , GENDER
+	   , IS_BLACK
+	   , CNT_WARNING
+	   , LIKES_CODE
+	   , LOCATION_CODE
+	   , EMAIL
+	   , PROFILE_PATH
+	</sql>
+	
+    <sql id="store">
+	  	 CO_NAME
+	   , CO_TEL
+	   , CO_ADDRESS
+	   , CO_REG_NO
+	   , AD_NO
+	   , LOCATION_CODE
+	   , EMAIL
+	</sql>
+	
+	<select id="selectLoginUser" resultMap="userResultMap">
+		SELECT
+		  	A.EMAIL,
+		  	A.USER_TYPE
+		  FROM user_tbl A
+		 WHERE A.EMAIL = #{ email }
+		   AND IS_DEACTIVATE != 'Y'
+	</select>
+	
+	<select id="selectMember" resultMap="memberResultMap" >
+		SELECT
+			A.EMAIL,
+			A.NICKNAME,
+			A.PROFILE_PATH,
+			A.LOCATION_CODE,
+			A.IS_BLACK
+		  FROM member_tbl A
+		  JOIN LOCATION_TBL B on A.LOCATION_CODE = B.LOCATION_CODE
+		 WHERE A.EMAIL = #{ email }
+	</select>
+	
+	<select id="selectLocationName" resultType="String" >
+		SELECT LOCATION_NAME
+		  FROM LOCATION_TBL 
+		 WHERE LOCATION_CODE = #{ locationCode }
+	</select>
+	
+	<select id="selectStore" resultMap="storeResultMap">
+		SELECT
+			   A.CO_NAME
+			 , A.CO_TEL
+			 , A.CO_ADDRESS
+			 , A.CO_REG_NO
+			 , A.AD_NO
+			 , A.LOCATION_CODE
+			 , A.EMAIL 
+			 , B.MEM_NAME
+			 , B.MEM_PHONE
+		  FROM AD_STORE_TBL A
+		  JOIN user_tbl B ON(A.EMAIL = B.EMAIL)
+		 WHERE A.EMAIL = #{ email }
+	</select>
+	
+	<select id="selectPassword" resultType="string">
+		SELECT
+		  	   A.PASSWORD
+		  FROM user_tbl A
+		 WHERE A.EMAIL = #{ email } 
+	</select>
+	
+	<insert id="registUser" parameterType="com.km.member.model.dto.UserDTO">
+		INSERT
+		  INTO user_tbl 
+		(
+		  EMAIL
+		, MEM_NAME
+		, MEM_PHONE
+		, PASSWORD
+		, USER_TYPE 
+		)
+		VALUES
+		(
+		  #{ email }
+		, #{ name }
+		, #{ phone }
+		, #{ password }
+		, #{ userType }  
+		)  
+	</insert>
+	
+	<insert id="registMember">
+		INSERT
+		  INTO member_tbl
+		(
+		  NICKNAME
+	    , BIRTH_DAY
+	    , MEM_ADDRESS
+	    , GENDER
+	    , LIKES_CODE
+	    , LOCATION_CODE
+	    , EMAIL
+	    , PROFILE_PATH
+		)
+		VALUES
+		(
+		  #{ nickName }
+		, #{ birthDay }
+		, #{ address }
+		, #{ gender }
+		, #{ likesCode }
+		, #{ locationCode }
+		, #{ user.email }
+		, 'profile.png'
+		)  
+	</insert>
+	
+	<update id = "updatePassword">
+		UPDATE USER_TBL A
+		   SET A.PASSWORD = #{ password }
+		 WHERE A.EMAIL = #{ email }
+	</update>
+	
+	<select id="selectUserByEmailAndName" resultType="_int">
+		SELECT COUNT(A.EMAIL)
+		  FROM USER_TBL A
+		 WHERE A.MEM_NAME = #{ name }
+		   AND A.EMAIL = #{ email }
+	</select>
+	
+	<select id="selectMatchedEmail" parameterType="string"  resultType="_int">
+		SELECT
+			   count(*)
+		  FROM user_tbl A
+		 WHERE A.EMAIL = #{ email } 
+	</select>
+
+	<select id ="selectLoationList" resultType="hashmap">
+		SELECT LOCATION_CODE,
+			   LOCATION_NAME
+		  FROM LOCATION_TBL
+		 WHERE LOCATION_CODE NOT IN ('L0')
+	</select>
+	
+	<select id ="selectLikesList" resultType="hashmap">
+		SELECT LIKES_CODE,
+			   LIKES_NAME
+		  FROM LIKES_TBL
+	</select>
+	
+	<update id="updateMemberNickName" parameterType="com.km.member.model.dto.MemberDTO">
+		UPDATE MEMBER_TBL 
+		   SET NICKNAME = #{ nickName }
+		 WHERE EMAIL = #{ email }
+	</update>
+	
+	<update id="updateUserPhone" parameterType="com.km.member.model.dto.UserDTO">
+		UPDATE USER_TBL
+		   SET MEM_PHONE = #{ phone }
+		 WHERE EMAIL = #{ email }
+	</update>
+	
+	<update id="updateMemberAddress" parameterType="com.km.member.model.dto.MemberDTO">
+		UPDATE MEMBER_TBL
+		   SET MEM_ADDRESS = #{ address }
+		 WHERE EMAIL = #{ email }
+	</update>
+	
+	<update id="updateMemberLikesCode" parameterType="com.km.member.model.dto.MemberDTO" >
+		UPDATE MEMBER_TBL
+		   SET LIKES_CODE = #{ likesCode }
+		 WHERE EMAIL = #{ email }
+	</update>
+	
+	<update id="updateMemberLocationCode" parameterType="com.km.member.model.dto.MemberDTO">
+		UPDATE MEMBER_TBL
+		   SET LOCATION_CODE = #{ locationCode }
+		 WHERE EMAIL = #{ email }
+	</update>
+	
+	<insert id="insertStoreMember">
+		INSERT
+		  INTO ad_store_tbl
+		(
+		  CO_NAME
+		, CO_TEL
+		, CO_ADDRESS
+		, CO_REG_NO
+		, LOCATION_CODE
+		, EMAIL
+		)
+		VALUES
+		(
+		  #{ storeName }
+		, #{ storeTel }
+		, #{ address }
+		, #{ storeNo }
+		, #{ locationCode }
+		, #{ user.email }
+		)
+	</insert>
+	
+	<update id="updateProfilePath" parameterType="com.km.member.model.dto.MemberDTO">
+		UPDATE MEMBER_TBL
+		   SET PROFILE_PATH = #{ profilePath }
+		 WHERE EMAIL = #{ email }
+	</update>
+	
+	<select id="selectMatchedNickName" parameterType="string"  resultType="_int">
+		SELECT
+			   count(*)
+		  FROM member_tbl A
+		 WHERE A.NICKNAME = #{ nickName } 
+	</select>
+	
+	<select id="selectEmailByNameAndPhone" resultType="string">
+		SELECT
+			   EMAIL
+		  FROM user_tbl
+		 WHERE MEM_NAME = #{ name }
+		   AND MEM_PHONE = #{ phone }
+	</select>
+	
+	<update id = "deleteUserAccount" parameterType="string">
+		UPDATE USER_TBL
+		   SET IS_DEACTIVATE = 'Y'
+		 WHERE EMAIL = #{ email }
+	</update>
+	
+</mapper>
