@@ -7,9 +7,6 @@
 	<properties resource="connection-info.properties"/>
 	
     <!-- 클래스에 대한 별칭 -->
-	<typeAliases>
-        <typeAlias type="com.km.common.paging.PageNumberingAndSearching" alias="PageNumberingAndSearching"/>
-    </typeAliases>
 
 	<environments default="dev">
         <environment id="dev">
@@ -22,14 +19,6 @@
             </dataSource>
         </environment>
     </environments>
-    
-    <mappers>
-		<package name="com.km.member.dao"/>
-		<package name="com.km.member.mypage.dao"/>
-		<package name="com.km.board.dao"/>
-		<package name="com.km.store.dao"/>
-		<package name="com.km.management.dao"/>
-		<package name="com.km.chat.dao"/>
-	</mappers>
+ 
 </configuration>
     
